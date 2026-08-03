@@ -1,1 +1,8 @@
-I already told you, just answer in short, bro. I'm so lazy to read those paras.
+import { z } from "zod";
+
+export const workspaceCommandsSchema = z.object({
+    type: z.enum(["START_WORKSPACE", "STOP_WORKSPACE", "DELETE_WORKSPACE"]),
+    workspaceId: z.uuid(),
+}).strict();
+
+export type WorkspaceCommands = z.infer<typeof workspaceCommandsSchema>;
