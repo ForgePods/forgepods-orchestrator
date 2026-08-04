@@ -8,6 +8,7 @@ export const envSchema = z.object({
     DATABASE_URL: z.string(),
     RABBITMQ_URL: z.url(),
     HEALTH_PORT: z.coerce.number(),
+    KUBERNETES_NAMESPACE: z.string().min(1).default("forgepods"),
 });
 
 export type EnvType = z.infer<typeof envSchema>;
