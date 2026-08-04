@@ -6,7 +6,7 @@ dotenv.config();
 export const envSchema = z.object({
     NODE_ENV: z.enum(["development","production"]).default("development"),
     DATABASE_URL: z.string(),
-    RABBITMQ_URL: z.string(),
+    RABBITMQ_URL: z.url(),
     HEALTH_PORT: z.coerce.number(),
 });
 
