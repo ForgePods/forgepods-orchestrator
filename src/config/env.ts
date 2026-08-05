@@ -9,6 +9,27 @@ export const envSchema = z.object({
     RABBITMQ_URL: z.url(),
     HEALTH_PORT: z.coerce.number(),
     KUBERNETES_NAMESPACE: z.string().min(1).default("forgepods"),
+    AWS_REGION: z.string().min(1),
+    WORKSPACE_S3_BUCKET: z.string().min(1),
+    WORKSPACE_STORAGE_IMAGE: z
+        .string()
+        .min(1)
+        .default("amazon/aws-cli:2"),
+    WORKSPACE_SERVICE_ACCOUNT_NAME: z
+        .string()
+        .min(1)
+        .default("forgepods-workspace"),
+    WORKSPACE_BASE_DOMAIN: z.string().min(1),
+    KUBERNETES_INGRESS_CLASS: z.string().min(1).default("nginx"),
+    WORKSPACE_TLS_SECRET_NAME: z.preprocess(
+        (value) => (value === "" ? undefined : value),
+        z.string().min(1).optional(),
+    ),
+    WORKSPACE_SYNC_INTERVAL_SECONDS: z.coerce
+        .number()
+        .int()
+        .positive()
+        .default(10),
 });
 
 export type EnvType = z.infer<typeof envSchema>;
