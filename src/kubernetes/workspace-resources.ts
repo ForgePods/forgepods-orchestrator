@@ -1,6 +1,7 @@
 import type { WorkspaceContext } from "../database/workspace-repository.js";
 import { isKubernetesApiError } from "./api-error.js";
 import { coreV1Api, networkingV1Api } from "./client.js";
+import { isWorkspacePodReady } from "./workspace-readiness.js";
 import {
     buildWorkspaceIngress,
     type WorkspaceIngressConfig,
@@ -29,6 +30,27 @@ export type DeleteWorkspaceResourcesResult = {
     service: WorkspaceResourceDeletionState;
     ingress: WorkspaceResourceDeletionState;
 };
+
+export type WorkspaceResourcesState = {
+    podExists: boolean;
+    podReady: boolean;
+    serviceExists: boolean;
+    ingressExists: boolean;
+};
+
+async function readIfPresent<T>(
+    read: () => Promise<T>,
+): Promise<T | null> {
+    try {
+        return await read();
+    } catch (error) {
+        if (isKubernetesApiError(error, 404)) {
+            return null;
+        }
+
+        throw error;
+    }
+}
 
 async function createIfMissing(
     read: () => Promise<unknown>,
@@ -68,6 +90,40 @@ async function deleteIfPresent(
 
         throw error;
     }
+}
+
+export async function getWorkspaceResourcesState(
+    context: WorkspaceContext,
+    namespace: string,
+): Promise<WorkspaceResourcesState> {
+    const resourceName = getWorkspaceResourceName(context.forge.id);
+    const [pod, service, ingress] = await Promise.all([
+        readIfPresent(() =>
+            coreV1Api.readNamespacedPod({
+                namespace,
+                name: resourceName,
+            }),
+        ),
+        readIfPresent(() =>
+            coreV1Api.readNamespacedService({
+                namespace,
+                name: resourceName,
+            }),
+        ),
+        readIfPresent(() =>
+            networkingV1Api.readNamespacedIngress({
+                namespace,
+                name: resourceName,
+            }),
+        ),
+    ]);
+
+    return {
+        podExists: pod !== null,
+        podReady: pod ? isWorkspacePodReady(pod) : false,
+        serviceExists: service !== null,
+        ingressExists: ingress !== null,
+    };
 }
 
 export async function ensureWorkspaceResources(

@@ -1,4 +1,6 @@
+import { env } from "./config/env.js";
 import { connectDatabase } from "./database/connectDB.js";
+import { startWorkspaceReconciler } from "./reconciliation/workspace-reconciler.js";
 import { connectRabbitMQ } from "./rabbitmq/connectRabbitMQ.js";
 import { consumeWorkspaceCommands } from "./rabbitmq/consumer.js";
 import { setupRabbitMQTopology } from "./rabbitmq/topology.js";
@@ -13,3 +15,8 @@ const workspaceCommandHandler = createWorkspaceCommandHandler(
 );
 
 await consumeWorkspaceCommands(rabbitMQChannel, workspaceCommandHandler);
+
+startWorkspaceReconciler(workspaceCommandHandler, {
+    namespace: env.KUBERNETES_NAMESPACE,
+    intervalMs: env.RECONCILIATION_INTERVAL_SECONDS * 1_000,
+});

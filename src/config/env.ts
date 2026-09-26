@@ -30,6 +30,11 @@ export const envSchema = z.object({
         .int()
         .positive()
         .default(10),
+    RECONCILIATION_INTERVAL_SECONDS: z.coerce
+        .number()
+        .int()
+        .positive()
+        .default(30),
 });
 
 export type EnvType = z.infer<typeof envSchema>;
